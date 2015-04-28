@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=320, initial-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+  <title>PubNub</title>
+
+  <!-- JQuery libraries -->
+  <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+  <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
+  <!-- Bootstrap libraries -->
+  <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+  <!-- Custom css -->
+  <!--<link href="pubnub.css" rel="stylesheet">-->
+
+  <!-- Pubnub libraries -->
+  <script src='http://cdn.pubnub.com/pubnub-3.4.min.js'></script>
+
+  <!-- Pubnub credentials -->
+ <!--<script src='cred.js'></script>-->
+
+  <script>
+  	channelChoice = "north";
+    function startChat() {
+
+      // Grab the elements
+      var input = $("#input");
+      var buttonSend = $("#buttonSend");
+      var buttonHistory = $("#buttonHistory");
+      var output = $("#output");
+
+      // Init PubNub
+      pubnub = PUBNUB.init({
+        publish_key   : "pub-c-fcb24cf1-c80f-4a7a-8895-0b2eafa1900c",
+        subscribe_key : "sub-c-64985a5e-ed85-11e4-8141-0619f8945a4f"
+      });
+
+      // receive messages
+      pubnub.subscribe({
+        'channel'   : channelChoice,
+        'callback'  : function(message) {
+          output.html(output.html() + '<br />' + message);
+        }
+      });
+
+      // send messages
+      buttonSend.on('click', function() {
+        pubnub.publish({
+          'channel' : channelChoice,
+          'message' : input.val()
+        });
+      });
+
+      // check history
+      buttonHistory.on('click', function() {
+        output.html("");
+        pubnub.history({
+          count : 10,
+          channel : channelChoice,
+          callback : function (message) {
+            output.append(message[0].join("<br />"))
+          }
+        });
+      });
+
+} // $(function() {
+		
+function test() {
+  //if (window.DeviceOrientationEvent) {
+    // Listen for the deviceorientation event and handle the raw data
+    window.addEventListener('deviceorientation', function(eventData) {  
+	//console.log(eventData.alpha);
+	//alert(eventData.alpha);  
+	var orientation = Math.round(eventData.alpha);
+	if(orientation>=0 && orientation < 90) {
+		$("#demo").html("North " + orientation);  
+		checkOri("north");
+	} else if (orientation>=90 && orientation < 180) {
+		$("#demo").html("West " + orientation);  
+		checkOri("west");
+	} else if (orientation>=180 && orientation < 270) {
+		$("#demo").html("South " + orientation);  
+		checkOri("south");
+	} else {
+		$("#demo").html("East " + orientation);  
+		checkOri("east");
+	}
+	//$("#demo").html(orientation);  
+      //alert(eventData.alpha); // call our orientation event handler
+      }, false);
+  //}
+}
+
+function checkOri(newOri) {
+	if(newOri != channelChoice) {
+	pubnub.unsubscribe({channel : channelChoice });
+	$("#output").html("");  
+	channelChoice = newOri;
+	startChat();
+	}
+}
+
+$( document ).ready(function() {
+	startChat();
+    test();
+});
+</script>
+</head>
+
+<body>
+  <div class="container">
+    <div id="demo"></div>
+    <input class="input-block-level" type="text" placeholder="Enter chat here" id="input">
+    <button id="buttonSend" class="btn">Send</button>
+    <button id="buttonHistory" class="btn">History</button>
+    <div id="output" style="margin-top:10px"></div>
+  </div>
+</body>
+</html>
